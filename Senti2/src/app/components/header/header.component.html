@@ -1,21 +1,20 @@
 <header class="navbar">
   <div class="logo" routerLink="/inicio">Senti2</div>
 
-  <nav>
+  <nav aria-label="Navegación principal">
     <a routerLink="/inicio" routerLinkActive="active">Inicio</a> <a routerLink="/servicios"
       routerLinkActive="active">Servicios</a>
     <a routerLink="/psicologos" routerLinkActive="active">Psicólogos</a>
     <a routerLink="/origen" routerLinkActive="active">Origen</a>
     <a routerLink="/contacto" routerLinkActive="active">Contacto</a>
 
-    @if (supabase.currentUser$ | async; as user) {
+    @if (isAuthenticated) {
     <a routerLink="/area-personal" routerLinkActive="active">Área Personal</a>
     <a routerLink="/perfil" routerLinkActive="active" class="profile-link">
-      <span class="user-name" [title]="user?.email || 'Mi Perfil'">
-        {{ (userName$ | async) || 'Mi Perfil' }}
+      <span class="user-name" [title]="userEmail || 'Mi Perfil'">
+        {{ displayName }}
       </span>
     </a>
-    <a (click)="supabase.signOut()" style="cursor: pointer;" class="logout-link">Salir</a>
     } @else {
     <a routerLink="/login" routerLinkActive="active">Login</a>
     }

@@ -30,6 +30,7 @@ export class PerfilComponent implements OnInit {
     telefono: '',
     fecha_nacimiento: ''
   };
+  private originalProfile: UserProfile | null = null;
   loading = false;
   saving = false;
   errorMessage = '';
@@ -61,13 +62,13 @@ export class PerfilComponent implements OnInit {
       const existingProfile = await this.supabase.getUserProfile(user.id);
       if (existingProfile) {
         this.profile = existingProfile;
-        if (this.profile.fecha_nacimiento) {
-          const date = new Date(this.profile.fecha_nacimiento);
-          this.profile.fecha_nacimiento = date.toISOString().split('T')[0];
-        }
+        this.profile.fecha_nacimiento = this.toDateInputValue(this.profile.fecha_nacimiento);
       } else {
         this.profile.user_id = user.id;
       }
+
+      this.mergeAccountInfoIntoProfile();
+      this.originalProfile = this.cloneProfile(this.profile);
     } catch (error: any) {
       this.errorMessage = 'Error al cargar el perfil: ' + (error.message || 'Error desconocido');
     } finally {
@@ -76,9 +77,22 @@ export class PerfilComponent implements OnInit {
   }
 
   toggleEditMode() {
-    this.editMode = !this.editMode;
+    if (!this.editMode) {
+      this.originalProfile = this.cloneProfile(this.profile);
+      this.mergeAccountInfoIntoProfile();
+      this.editMode = true;
+    } else {
+      this.cancelEdit();
+    }
     this.errorMessage = '';
     this.successMessage = '';
+  }
+
+  cancelEdit(): void {
+    if (this.originalProfile) {
+      this.profile = this.cloneProfile(this.originalProfile);
+    }
+    this.editMode = false;
   }
 
   async saveProfile() {
@@ -95,10 +109,8 @@ export class PerfilComponent implements OnInit {
       const updatedProfile = await this.supabase.updateUserProfile(this.profile);
       if (updatedProfile) {
         this.profile = updatedProfile;
-        if (this.profile.fecha_nacimiento) {
-          const date = new Date(this.profile.fecha_nacimiento);
-          this.profile.fecha_nacimiento = date.toISOString().split('T')[0];
-        }
+        this.profile.fecha_nacimiento = this.toDateInputValue(this.profile.fecha_nacimiento);
+        this.originalProfile = this.cloneProfile(this.profile);
         this.successMessage = 'Perfil actualizado correctamente';
         this.editMode = false;
         setTimeout(() => {
@@ -179,5 +191,68 @@ export class PerfilComponent implements OnInit {
       month: 'long', 
       day: 'numeric' 
     });
+  }
+
+  private cloneProfile(p: UserProfile): UserProfile {
+    return JSON.parse(JSON.stringify(p)) as UserProfile;
+  }
+
+  private toDateInputValue(value?: string): string {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toISOString().split('T')[0];
+  }
+
+  private mergeAccountInfoIntoProfile(): void {
+    const metadata = this.userMetadata || {};
+
+    const fullName = (metadata['full_name'] as string) || '';
+    const givenName = (metadata['given_name'] as string) || '';
+    const familyName = (metadata['family_name'] as string) || '';
+    const displayName = (this.displayName as string) || '';
+    const displayNameLooksLikeEmail = displayName.includes('@');
+    const fallbackNameSource =
+      fullName ||
+      (!displayNameLooksLikeEmail ? displayName : '');
+
+    if ((!this.profile.nombre || !this.profile.nombre.trim()) && (givenName || fullName)) {
+      this.profile.nombre = givenName || this.splitName(fullName).nombre;
+    }
+    if ((!this.profile.apellidos || !this.profile.apellidos.trim()) && (familyName || fullName)) {
+      this.profile.apellidos = familyName || this.splitName(fullName).apellidos;
+    }
+
+    if (
+      (!this.profile.nombre || !this.profile.nombre.trim() || !this.profile.apellidos || !this.profile.apellidos.trim()) &&
+      fallbackNameSource
+    ) {
+      const split = this.splitName(fallbackNameSource);
+      if (!this.profile.nombre || !this.profile.nombre.trim()) this.profile.nombre = split.nombre;
+      if (!this.profile.apellidos || !this.profile.apellidos.trim()) this.profile.apellidos = split.apellidos;
+    }
+
+    const phone =
+      (metadata['phone'] as string) ||
+      (metadata['telefono'] as string) ||
+      (metadata['phone_number'] as string) ||
+      '';
+    if ((!this.profile.telefono || !this.profile.telefono.trim()) && phone) {
+      this.profile.telefono = phone;
+    }
+
+    const birth =
+      (metadata['birthdate'] as string) ||
+      (metadata['fecha_nacimiento'] as string) ||
+      '';
+    if ((!this.profile.fecha_nacimiento || !this.profile.fecha_nacimiento.trim()) && birth) {
+      this.profile.fecha_nacimiento = this.toDateInputValue(birth);
+    }
+  }
+
+  private splitName(fullName: string): { nombre: string; apellidos: string } {
+    const parts = (fullName || '').trim().split(/\s+/).filter(Boolean);
+    if (parts.length <= 1) return { nombre: parts[0] ?? '', apellidos: '' };
+    return { nombre: parts[0], apellidos: parts.slice(1).join(' ') };
   }
 }

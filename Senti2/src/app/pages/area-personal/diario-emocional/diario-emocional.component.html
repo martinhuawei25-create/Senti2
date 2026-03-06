@@ -18,17 +18,17 @@
       <p class="date-label">Fecha: {{ todayStr }}</p>
       <form class="diario-form" (ngSubmit)="save()">
         <div class="form-group">
-          <label>¿Cómo te sientes hoy? (1 = muy bajo, 10 = muy bien)</label>
+          <label for="mood-scale">¿Cómo te sientes hoy? (1 = muy bajo, 10 = muy bien)</label>
           <div class="scale-row">
-            <span class="scale-min">1</span>
-            <input type="range" min="1" max="10" [(ngModel)]="mood" name="mood" class="scale-input">
-            <span class="scale-max">10</span>
-            <span class="scale-value">{{ mood }}</span>
+            <span class="scale-min" aria-hidden="true">1</span>
+            <input type="range" id="mood-scale" min="1" max="10" [(ngModel)]="mood" name="mood" class="scale-input" aria-valuemin="1" aria-valuemax="10" [attr.aria-valuenow]="mood" [attr.aria-valuetext]="mood + ' de 10'">
+            <span class="scale-max" aria-hidden="true">10</span>
+            <span class="scale-value" aria-hidden="true">{{ mood }}</span>
           </div>
         </div>
         <div class="form-group">
-          <label>Emociones principales (marca las que sientas hoy)</label>
-          <div class="emotions-row">
+          <label id="emotions-desc">Emociones principales (marca las que sientas hoy)</label>
+          <div class="emotions-row" role="group" aria-labelledby="emotions-desc">
             <label class="emotion-chip" *ngFor="let e of emociones">
               <input type="checkbox" [checked]="selectedEmotions[e]" (change)="toggleEmotion(e)">
               <span>{{ e }}</span>
@@ -36,11 +36,12 @@
           </div>
         </div>
         <div class="form-group">
-          <label>Notas del día (opcional)</label>
-          <textarea placeholder="¿Qué ha pasado hoy? ¿Qué te ha ayudado o dificultado?" rows="4" [(ngModel)]="note" name="note"></textarea>
+          <label for="note">Notas del día (opcional)</label>
+          <textarea id="note" placeholder="¿Qué ha pasado hoy? ¿Qué te ha ayudado o dificultado?" rows="4" [(ngModel)]="note" name="note"></textarea>
         </div>
-        <button type="submit" class="btn-save">Guardar entrada</button>
-        <p class="saved-msg" *ngIf="saved">Entrada guardada correctamente.</p>
+        <button type="submit" class="btn-save" [disabled]="saving">
+          {{ saving ? 'Guardando...' : 'Guardar entrada' }}
+        </button>
       </form>
     </section>
 

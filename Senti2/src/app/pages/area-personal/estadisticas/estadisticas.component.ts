@@ -14,6 +14,7 @@ export class EstadisticasComponent implements OnInit {
   testResults: TestResultRecord[] = [];
   diaryEntries: DiaryEntry[] = [];
   lastByTest: Record<string, TestResultRecord> = {};
+  loading = true;
   diaryStats: { avgMoodLast7: number | null; totalEntries: number; emotionsCount: Record<string, number> } = {
     avgMoodLast7: null,
     totalEntries: 0,
@@ -27,10 +28,19 @@ export class EstadisticasComponent implements OnInit {
   }
 
   private async loadData(): Promise<void> {
-    this.testResults = await this.areaData.getTestResults();
-    this.diaryEntries = await this.areaData.getDiaryEntries();
-    this.buildLastByTest();
-    this.buildDiaryStats();
+    this.loading = true;
+    try {
+      const [testResults, diaryEntries] = await Promise.all([
+        this.areaData.getTestResults(),
+        this.areaData.getDiaryEntries()
+      ]);
+      this.testResults = testResults;
+      this.diaryEntries = diaryEntries;
+      this.buildLastByTest();
+      this.buildDiaryStats();
+    } finally {
+      this.loading = false;
+    }
   }
 
   private buildLastByTest(): void {

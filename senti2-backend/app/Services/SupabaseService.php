@@ -125,6 +125,33 @@ class SupabaseService
         }
     }
 
+    public function refreshToken(string $refreshToken): array
+    {
+        try {
+            $response = Http::withHeaders([
+                'apikey' => $this->anonKey,
+                'Content-Type' => 'application/json',
+            ])->post("{$this->url}/auth/v1/token?grant_type=refresh_token", [
+                'refresh_token' => $refreshToken,
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                return [
+                    'success' => true,
+                    'access_token' => $data['access_token'] ?? null,
+                    'refresh_token' => $data['refresh_token'] ?? $refreshToken,
+                    'user' => $data['user'] ?? null,
+                ];
+            }
+
+            return ['success' => false, 'access_token' => null, 'refresh_token' => null, 'user' => null];
+        } catch (\Exception $e) {
+            Log::error('Error en refreshToken: ' . $e->getMessage());
+            return ['success' => false, 'access_token' => null, 'refresh_token' => null, 'user' => null];
+        }
+    }
+
     public function getGoogleOAuthUrl(string $redirectUrl): string
     {
         $redirectUri = urlencode($redirectUrl);
@@ -279,6 +306,66 @@ class SupabaseService
         } catch (\Exception $e) {
             Log::error('Supabase getDiaryEntries: ' . $e->getMessage());
             return [];
+        }
+    }
+
+    public function getProfile(string $userId): ?array
+    {
+        try {
+            if ($this->serviceRoleKey === '') {
+                Log::error('Supabase service_role_key no configurada (SUPABASE_SERVICE_ROLE_KEY)');
+                return null;
+            }
+            $url = $this->restUrl('profiles') . '?user_id=eq.' . $userId . '&limit=1';
+            $response = Http::withHeaders($this->restHeaders())->get($url);
+            if ($response->successful()) {
+                $list = $response->json();
+                if (is_array($list) && isset($list[0])) {
+                    return $list[0];
+                }
+                return null;
+            }
+            return null;
+        } catch (\Exception $e) {
+            Log::error('Supabase getProfile: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    public function upsertProfile(string $userId, array $data): ?array
+    {
+        try {
+            if ($this->serviceRoleKey === '') {
+                Log::error('Supabase service_role_key no configurada (SUPABASE_SERVICE_ROLE_KEY)');
+                return null;
+            }
+            $existing = $this->getProfile($userId);
+            $payload = array_merge([
+                'nombre' => $data['nombre'] ?? '',
+                'apellidos' => $data['apellidos'] ?? '',
+                'telefono' => $data['telefono'] ?? '',
+                'fecha_nacimiento' => $data['fecha_nacimiento'] ?? null,
+            ], ['user_id' => $userId]);
+
+            if ($existing === null) {
+                $response = Http::withHeaders($this->restHeaders())
+                    ->withHeaders(['Prefer' => 'return=representation'])
+                    ->post($this->restUrl('profiles'), $payload);
+            } else {
+                $response = Http::withHeaders($this->restHeaders())
+                    ->withHeaders(['Prefer' => 'return=representation'])
+                    ->patch($this->restUrl('profiles') . '?user_id=eq.' . $userId, $payload);
+            }
+
+            if ($response->successful()) {
+                $json = $response->json();
+                return is_array($json) && isset($json[0]) ? $json[0] : $json;
+            }
+            Log::error('Supabase upsertProfile failed', ['status' => $response->status(), 'body' => $response->body()]);
+            return null;
+        } catch (\Exception $e) {
+            Log::error('Supabase upsertProfile: ' . $e->getMessage());
+            return null;
         }
     }
 }
