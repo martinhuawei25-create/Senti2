@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Services\SupabaseService;
-use App\Models\Profile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -74,6 +73,26 @@ class AuthController extends Controller
         return response()->json([
             'access_token' => $data['access_token'],
             'refresh_token' => $data['refresh_token'] ?? null,
+            'user' => $user,
+        ]);
+    }
+
+    public function refresh(Request $request)
+    {
+        $refreshToken = $request->input('refresh_token');
+        if (!$refreshToken) {
+            return response()->json(['error' => 'refresh_token requerido'], 400);
+        }
+
+        $result = $this->supabaseService->refreshToken($refreshToken);
+        if (!$result['success'] || !$result['access_token']) {
+            return response()->json(['error' => 'Token de refresco inválido o expirado'], 401);
+        }
+
+        $user = $result['user'] ?? $this->supabaseService->getUser($result['access_token']);
+        return response()->json([
+            'access_token' => $result['access_token'],
+            'refresh_token' => $result['refresh_token'],
             'user' => $user,
         ]);
     }
@@ -211,11 +230,8 @@ class AuthController extends Controller
 
     private function ensureProfile(string $userId): void
     {
-        $profile = Profile::where('user_id', $userId)->first();
-        
-        if (!$profile) {
-            Profile::create([
-                'user_id' => $userId,
+        if ($this->supabaseService->getProfile($userId) === null) {
+            $this->supabaseService->upsertProfile($userId, [
                 'nombre' => '',
                 'apellidos' => '',
                 'telefono' => '',

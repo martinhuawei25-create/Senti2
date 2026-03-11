@@ -1,8 +1,3 @@
-/**
- * Programas de bienestar estructurados (4–8 semanas).
- * Basados en TCC, higiene del sueño y regulación emocional con evidencia.
- */
-
 export interface SemanaPrograma {
   week: number;
   title: string;

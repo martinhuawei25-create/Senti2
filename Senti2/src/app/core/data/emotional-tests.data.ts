@@ -1,23 +1,11 @@
-/**
- * Tests emocionales basados en instrumentos de cribado validados:
- * - GAD-7 (ansiedad): Spitzer et al. Arch Intern Med 2006; validación española en atención primaria.
- * - PHQ-9 (depresión): Kroenke et al. J Gen Intern Med 2001; versión española validada.
- * - WHO-5 (bienestar): OMS; Topp et al. Psychother Psychosom 2015; puntuación 0-100, corte ≤50.
- *
- * Herramientas basadas en: NICE CG113 (ansiedad), OMS/Cochrane (activación conductual, ejercicio),
- * evidencia en respiración diafragmática y TCC para ansiedad.
- */
-
 export interface TestQuestion {
   id: string;
   text: string;
 }
 
-/** Herramienta de gestión emocional con base en evidencia. */
 export interface EmotionalTool {
   title: string;
   description: string;
-  /** Referencia breve a la evidencia (guías, revisiones). */
   evidence?: string;
 }
 

@@ -1,8 +1,3 @@
-/**
- * Contenido de recursos educativos (artículos y ejercicios) con base en evidencia.
- * Referencias: NICE, OMS, guías de TCC y mindfulness.
- */
-
 export interface Articulo {
   id: string;
   title: string;

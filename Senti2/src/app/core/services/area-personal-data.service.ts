@@ -70,7 +70,6 @@ export class AreaPersonalDataService {
     return h;
   }
 
-  /** Guarda resultado de test: en API si hay sesión, si no en localStorage. */
   async addTestResult(record: Omit<TestResultRecord, 'date'>): Promise<void> {
     const withDate = { ...record, date: new Date().toISOString() };
     if (this.getToken()) {
@@ -91,7 +90,6 @@ export class AreaPersonalDataService {
         );
         return;
       } catch (_) {
-        // Fallback a localStorage si la API falla
       }
     }
     const data = this.getData();
@@ -99,7 +97,6 @@ export class AreaPersonalDataService {
     this.setData(data);
   }
 
-  /** Obtiene resultados de tests: desde API si hay sesión, si no desde localStorage. */
   async getTestResults(): Promise<TestResultRecord[]> {
     if (this.getToken()) {
       try {
@@ -109,12 +106,13 @@ export class AreaPersonalDataService {
           })
         );
         const list = res?.data ?? [];
-        return list.map(r => ({
-          ...r,
-          date: (r as any).date ?? new Date().toISOString()
-        })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        return list
+          .map(r => ({
+            ...r,
+            date: (r as any).date ?? new Date().toISOString()
+          }))
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       } catch (_) {
-        // Fallback a localStorage
       }
     }
     return [...this.getData().testResults].sort(
@@ -126,7 +124,6 @@ export class AreaPersonalDataService {
     return this.getTestResults().then(list => list.filter(r => r.testId === testId));
   }
 
-  /** Guarda entrada del diario: en API si hay sesión, si no en localStorage. */
   async addDiaryEntry(entry: Omit<DiaryEntry, 'id' | 'createdAt'>): Promise<void> {
     const newEntry: DiaryEntry = {
       ...entry,
@@ -149,7 +146,6 @@ export class AreaPersonalDataService {
         );
         return;
       } catch (_) {
-        // Fallback a localStorage
       }
     }
     const data = this.getData();
@@ -157,7 +153,6 @@ export class AreaPersonalDataService {
     this.setData(data);
   }
 
-  /** Obtiene entradas del diario: desde API si hay sesión, si no desde localStorage. */
   async getDiaryEntries(): Promise<DiaryEntry[]> {
     if (this.getToken()) {
       try {
@@ -167,12 +162,13 @@ export class AreaPersonalDataService {
           })
         );
         const list = res?.data ?? [];
-        return list.map(e => ({
-          ...e,
-          createdAt: (e as any).createdAt ?? new Date().toISOString()
-        })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        return list
+          .map(e => ({
+            ...e,
+            createdAt: (e as any).createdAt ?? new Date().toISOString()
+          }))
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       } catch (_) {
-        // Fallback a localStorage
       }
     }
     return [...this.getData().diaryEntries].sort(

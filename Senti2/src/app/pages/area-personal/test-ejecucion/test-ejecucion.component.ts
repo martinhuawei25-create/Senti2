@@ -77,13 +77,11 @@ export class TestEjecucionComponent implements OnInit {
     return this.test.questions.length * this.test.scaleMax;
   }
 
-  /** Puntuación a mostrar (raw o 0-100 para WHO-5). */
   get displayScore(): number {
     if (!this.test) return 0;
     return this.test.scoreDisplay === 'percentage' ? this.totalScore * 4 : this.totalScore;
   }
 
-  /** Puntuación máxima a mostrar (25 o 100 para WHO-5). */
   get displayMaxScore(): number {
     if (!this.test) return 0;
     return this.test.scoreDisplay === 'percentage' ? 100 : this.maxScore;

@@ -12,13 +12,13 @@ class VerifySupabaseToken
     public function handle(Request $request, Closure $next): Response
     {
         $token = $request->bearerToken();
-        
+
         if (!$token) {
             return response()->json(['error' => 'Token no proporcionado'], 401);
         }
 
         $supabaseUrl = config('services.supabase.url');
-        $supabaseKey = config('services.supabase.key');
+        $supabaseKey = config('services.supabase.anon_key') ?? config('services.supabase.key');
 
         try {
             $response = Http::withHeaders([
@@ -32,7 +32,7 @@ class VerifySupabaseToken
 
             $user = $response->json();
             $request->merge(['supabase_user' => $user]);
-            
+
             return $next($request);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Error al verificar token'], 500);

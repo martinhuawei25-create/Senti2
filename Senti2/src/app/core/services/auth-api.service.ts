@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { map, shareReplay } from 'rxjs/operators';
+import { BehaviorSubject, Observable, firstValueFrom } from 'rxjs';
+import { shareReplay } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 interface User {
@@ -57,17 +57,15 @@ export class AuthApiService {
         return this._currentUser.asObservable().pipe(shareReplay(1));
     }
 
-    /** Valor actual del usuario (sincrono). Usado por el guard para evitar verifyToken duplicado. */
     getCurrentUserValue(): User | null {
         return this._currentUser.value;
     }
 
     async signUp(email: string, password: string): Promise<any> {
         try {
-            const response: any = await this.http.post(`${this.apiUrl}/auth/signup`, {
-                email,
-                password
-            }).toPromise();
+            const response: any = await firstValueFrom(
+                this.http.post<any>(`${this.apiUrl}/auth/signup`, { email, password })
+            );
 
             return { data: response, error: null };
         } catch (error: any) {
@@ -80,10 +78,9 @@ export class AuthApiService {
 
     async signIn(email: string, password: string): Promise<any> {
         try {
-            const response: any = await this.http.post(`${this.apiUrl}/auth/signin`, {
-                email,
-                password
-            }).toPromise();
+            const response: any = await firstValueFrom(
+                this.http.post<any>(`${this.apiUrl}/auth/signin`, { email, password })
+            );
 
             if (response.access_token) {
                 this.setToken(response.access_token);
@@ -106,9 +103,9 @@ export class AuthApiService {
     async signInWithGoogle(): Promise<any> {
         try {
             const redirectTo = `${window.location.origin}/auth/callback`;
-            const response: any = await this.http.get(
-                `${this.apiUrl}/auth/google/url?redirect_to=${encodeURIComponent(redirectTo)}`
-            ).toPromise();
+            const response: any = await firstValueFrom(
+                this.http.get<any>(`${this.apiUrl}/auth/google/url?redirect_to=${encodeURIComponent(redirectTo)}`)
+            );
 
             if (response.url) {
                 window.location.href = response.url;
@@ -130,16 +127,16 @@ export class AuthApiService {
         
         if (token) {
             try {
-                await this.http.post(`${this.apiUrl}/auth/signout`, {}, {
-                    headers: this.getHeaders()
-                }).toPromise();
+                await firstValueFrom(
+                    this.http.post(`${this.apiUrl}/auth/signout`, {}, { headers: this.getHeaders() })
+                );
             } catch (error) {
                 console.error('Error al cerrar sesión:', error);
             }
         }
 
         this.clearAuth();
-        this.router.navigate(['/login']);
+        this.router.navigate(['/inicio']);
     }
 
     async verifyToken(token?: string): Promise<User | null> {
@@ -150,24 +147,32 @@ export class AuthApiService {
         }
 
         try {
-            const response: any = await this.http.post(`${this.apiUrl}/auth/verify`, {}, {
-                headers: new HttpHeaders({
-                    'Authorization': `Bearer ${tokenToUse}`
+            const response: any = await firstValueFrom(
+                this.http.post<any>(`${this.apiUrl}/auth/verify`, {}, {
+                    headers: new HttpHeaders({ 'Authorization': `Bearer ${tokenToUse}` })
                 })
-            }).toPromise();
+            );
 
             if (response.user) {
+                this._currentUser.next(response.user);
                 return response.user;
             }
 
             return null;
-        } catch (error) {
-            this.clearAuth();
+        } catch (error: any) {
+            // Solo borrar sesión si el token es inválido (401). Red o 500 no deben borrar el token.
+            if (error?.status === 401) {
+                this.clearAuth();
+            }
             return null;
         }
     }
 
     async getCurrentUser(): Promise<User | null> {
+        const cached = this._currentUser.value;
+        if (cached) {
+            return cached;
+        }
         const token = this.getToken();
         
         if (!token) {
@@ -175,9 +180,9 @@ export class AuthApiService {
         }
 
         try {
-            const response: any = await this.http.get(`${this.apiUrl}/auth/user`, {
-                headers: this.getHeaders()
-            }).toPromise();
+            const response: any = await firstValueFrom(
+                this.http.get<any>(`${this.apiUrl}/auth/user`, { headers: this.getHeaders() })
+            );
 
             if (response.user) {
                 this._currentUser.next(response.user);
@@ -193,7 +198,7 @@ export class AuthApiService {
 
     async getUserDisplayName(userId: string): Promise<string> {
         try {
-            const user = await this.getCurrentUser();
+            const user = this.getCurrentUserValue() ?? (await this.getCurrentUser());
             if (user) {
                 const metadata = user.user_metadata || {};
                 
@@ -224,16 +229,16 @@ export class AuthApiService {
             return 'Mi Perfil';
         } catch (error) {
             console.error('Error al obtener nombre de usuario:', error);
-            const user = await this.getCurrentUser();
+            const user = this.getCurrentUserValue() ?? (await this.getCurrentUser());
             return user?.email || 'Mi Perfil';
         }
     }
 
     async getUserProfile(userId: string): Promise<any> {
         try {
-            const response: any = await this.http.get(`${this.apiUrl}/profile`, {
-                headers: this.getHeaders()
-            }).toPromise();
+            const response: any = await firstValueFrom(
+                this.http.get<any>(`${this.apiUrl}/profile`, { headers: this.getHeaders() })
+            );
 
             return response;
         } catch (error) {
@@ -243,9 +248,9 @@ export class AuthApiService {
 
     async updateUserProfile(profile: any): Promise<any> {
         try {
-            const response: any = await this.http.put(`${this.apiUrl}/profile`, profile, {
-                headers: this.getHeaders()
-            }).toPromise();
+            const response: any = await firstValueFrom(
+                this.http.put<any>(`${this.apiUrl}/profile`, profile, { headers: this.getHeaders() })
+            );
 
             return response;
         } catch (error: any) {
@@ -257,6 +262,10 @@ export class AuthApiService {
         return localStorage.getItem(this.tokenKey);
     }
 
+    getRefreshToken(): string | null {
+        return localStorage.getItem(this.refreshTokenKey);
+    }
+
     private setToken(token: string): void {
         localStorage.setItem(this.tokenKey, token);
     }
@@ -265,22 +274,44 @@ export class AuthApiService {
         localStorage.setItem(this.refreshTokenKey, token);
     }
 
+    async refreshAccessToken(): Promise<boolean> {
+        const refreshToken = this.getRefreshToken();
+        if (!refreshToken) return false;
+        try {
+            const response: any = await firstValueFrom(
+                this.http.post<any>(`${this.apiUrl}/auth/refresh`, { refresh_token: refreshToken })
+            );
+            if (response?.access_token) {
+                this.setToken(response.access_token);
+                if (response.refresh_token) this.setRefreshToken(response.refresh_token);
+                if (response.user) this._currentUser.next(response.user);
+                return true;
+            }
+        } catch (error: any) {
+            // Solo borrar sesión si el refresh token es inválido (401). Errores de red no deben borrar.
+            if (error?.status === 401) {
+                this.clearAuth();
+            }
+        }
+        return false;
+    }
+
     private clearAuth(): void {
         localStorage.removeItem(this.tokenKey);
         localStorage.removeItem(this.refreshTokenKey);
         this._currentUser.next(null);
     }
 
-    handleAuthCallback(token: string, refreshToken?: string): void {
+    handleAuthCallback(token: string, refreshToken?: string, redirectUrl?: string): void {
         this.setToken(token);
         if (refreshToken) {
             this.setRefreshToken(refreshToken);
         }
-        
+        const target = redirectUrl || '/inicio';
         this.verifyToken(token).then(user => {
             if (user) {
                 this._currentUser.next(user);
-                this.router.navigate(['/inicio']);
+                this.router.navigateByUrl(target);
             }
         });
     }

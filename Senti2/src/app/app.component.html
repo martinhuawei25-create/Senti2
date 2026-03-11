@@ -8,3 +8,13 @@
   <app-footer></app-footer>
 }
 
+<div class="toast-container" aria-live="polite" aria-atomic="true" role="region" aria-label="Notificaciones">
+  @for (n of notificationService.listSnapshot; track n.id) {
+    @if (n.visible) {
+      <div class="toast toast-{{ n.type }}" role="alert">
+        <span class="toast-message">{{ n.message }}</span>
+        <button type="button" class="toast-dismiss" (click)="notificationService.remove(n.id)" aria-label="Cerrar notificación">×</button>
+      </div>
+    }
+  }
+</div>

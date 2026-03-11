@@ -11,6 +11,9 @@
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
         </testsuite>
+        <testsuite name="Browser">
+            <directory>tests/Browser</directory>
+        </testsuite>
     </testsuites>
     <source>
         <include>
@@ -31,5 +34,8 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="SUPABASE_URL" value="https://fake.supabase.co"/>
+        <env name="SUPABASE_ANON_KEY" value="test-anon-key"/>
+        <env name="SUPABASE_SERVICE_ROLE_KEY" value="test-service-role-key"/>
     </php>
 </phpunit>

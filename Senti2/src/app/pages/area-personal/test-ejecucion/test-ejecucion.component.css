@@ -200,7 +200,6 @@
   cursor: not-allowed;
 }
 
-/* Results */
 .results-box {
   background: white;
   border-radius: var(--radius-lg);

@@ -11,6 +11,7 @@ Route::prefix('v1')->group(function () {
 
     Route::post('/auth/signup', [AuthController::class, 'signUp']);
     Route::post('/auth/signin', [AuthController::class, 'signIn']);
+    Route::post('/auth/refresh', [AuthController::class, 'refresh']);
     Route::post('/auth/verify', [AuthController::class, 'verifyToken']);
     Route::get('/auth/google/url', [AuthController::class, 'getGoogleOAuthUrl']);
     Route::get('/auth/google/callback', [AuthController::class, 'googleCallback']);

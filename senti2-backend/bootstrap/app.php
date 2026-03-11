@@ -32,6 +32,13 @@ return Application::configure(basePath: dirname(__DIR__))
             ));
             $origin = $request->header('Origin');
             $allowOrigin = in_array($origin, $allowedOrigins) ? $origin : ($allowedOrigins[0] ?? '*');
+            if ($e instanceof \Illuminate\Validation\ValidationException) {
+                return response()->json([
+                    'message' => 'Error de validación',
+                    'errors' => $e->errors(),
+                ], 422)
+                    ->withHeaders(['Access-Control-Allow-Origin' => $allowOrigin]);
+            }
             $status = method_exists($e, 'getStatusCode') ? $e->getStatusCode() : 500;
             $message = config('app.debug') ? $e->getMessage() : 'Error interno del servidor';
             return response()->json(['message' => $message, 'error' => $message], $status)

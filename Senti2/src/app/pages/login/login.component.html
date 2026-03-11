@@ -1,5 +1,4 @@
 <div class="login-container">
-  <!-- Pantalla de carga al volver de OAuth (auth/callback) -->
   <div *ngIf="isProcessingCallback" class="callback-loading">
     <div class="callback-loading-spinner"></div>
     <p class="callback-loading-text">Completando inicio de sesión...</p>
@@ -39,11 +38,11 @@
     <div class="login-right">
       <div class="login-card">
 
-        <div class="auth-tabs">
-          <button class="auth-tab" [class.active]="!isRegisterMode" (click)="toggleMode()" type="button">
+        <div class="auth-tabs" role="tablist" aria-label="Forma de acceso">
+          <button class="auth-tab" [class.active]="!isRegisterMode" (click)="toggleMode()" type="button" role="tab" [attr.aria-selected]="!isRegisterMode" aria-label="Iniciar sesión con email">
             Iniciar Sesión
           </button>
-          <button class="auth-tab" [class.active]="isRegisterMode" (click)="toggleMode()" type="button">
+          <button class="auth-tab" [class.active]="isRegisterMode" (click)="toggleMode()" type="button" role="tab" [attr.aria-selected]="isRegisterMode" aria-label="Registrarse con email">
             Registrarse
           </button>
         </div>
@@ -54,8 +53,8 @@
         </div>
 
 
-        <div *ngIf="successMessage" class="success-message">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <div *ngIf="successMessage" class="success-message" role="alert" aria-live="polite">
+          <svg width="20" height="20" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
             <polyline points="22 4 12 14.01 9 11.01"></polyline>
           </svg>
@@ -157,7 +156,7 @@
             <span>O continúa con</span>
           </div>
 
-          <button class="btn-google full-width" (click)="onGoogleLogin()" [disabled]="loading">
+          <button class="btn-google full-width" (click)="onGoogleLogin()" [disabled]="loading" type="button" aria-label="Iniciar sesión con Google">
             <svg width="20" height="20" viewBox="0 0 24 24">
               <path fill="#4285F4"
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -173,8 +172,8 @@
         </div>
 
 
-        <div *ngIf="errorMessage" class="error-message">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <div *ngIf="errorMessage" class="error-message" role="alert" aria-live="assertive">
+          <svg width="20" height="20" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="12" y1="8" x2="12" y2="12"></line>
             <line x1="12" y1="16" x2="12.01" y2="16"></line>

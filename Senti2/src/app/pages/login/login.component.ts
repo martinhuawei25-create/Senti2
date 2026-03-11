@@ -20,7 +20,6 @@ export class LoginComponent implements OnInit {
   successMessage = '';
   loading = false;
   isRegisterMode = false;
-  /** Muestra "Cargando..." en /auth/callback mientras se procesa OAuth (hash). */
   isProcessingCallback = false;
 
   constructor(
@@ -31,7 +30,11 @@ export class LoginComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    // Supabase OAuth redirige aquí con tokens en el hash: #access_token=...&refresh_token=...
+    if (this.authApi.getToken()) {
+      this.router.navigateByUrl(this.getRedirectUrl());
+      return;
+    }
+
     const hash = typeof window !== 'undefined' ? window.location.hash : '';
     const isCallbackRoute = typeof window !== 'undefined' && window.location.pathname.includes('auth/callback');
 
@@ -52,14 +55,14 @@ export class LoginComponent implements OnInit {
         return;
       }
       if (accessToken) {
-        this.authApi.handleAuthCallback(accessToken, refreshToken ?? undefined);
+        const redirect = this.getRedirectUrl();
+        this.authApi.handleAuthCallback(accessToken, refreshToken ?? undefined, redirect);
         this.replaceStateWithoutHash();
         return;
       }
       this.isProcessingCallback = false;
     }
 
-    // Query params: backend puede redirigir con ?token=...&refresh_token=... o ?error=...
     this.route.queryParams.subscribe(params => {
       const token = params['token'];
       const refreshToken = params['refresh_token'];
@@ -71,9 +74,23 @@ export class LoginComponent implements OnInit {
       }
 
       if (token) {
-        this.authApi.handleAuthCallback(token, refreshToken);
+        const redirect = this.getRedirectUrl();
+        this.authApi.handleAuthCallback(token, refreshToken, redirect);
       }
     });
+  }
+
+  private getRedirectUrl(): string {
+    const fromQuery = this.route.snapshot.queryParams['redirect'];
+    if (fromQuery && typeof fromQuery === 'string' && fromQuery.startsWith('/')) {
+      return fromQuery;
+    }
+    const fromStorage = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('login_redirect') : null;
+    if (fromStorage) {
+      sessionStorage.removeItem('login_redirect');
+      return fromStorage;
+    }
+    return '/inicio';
   }
 
   private replaceStateWithoutHash(): void {
@@ -104,7 +121,8 @@ export class LoginComponent implements OnInit {
     try {
       const { data, error } = await this.supabase.signIn(this.email, this.password);
       if (error) throw error;
-      this.router.navigate(['/inicio']);
+      const redirect = this.route.snapshot.queryParams['redirect'];
+      this.router.navigateByUrl(redirect && redirect.startsWith('/') ? redirect : '/inicio');
     } catch (error: any) {
       this.errorMessage = error.message || 'Error al iniciar sesión. Por favor, verifica tus credenciales.';
     } finally {
@@ -136,7 +154,6 @@ export class LoginComponent implements OnInit {
       const { data, error } = await this.supabase.signUp(this.email, this.password);
       if (error) throw error;
       this.successMessage = '¡Registro exitoso! Por favor, revisa tu correo electrónico para confirmar tu cuenta.';
-      // Limpiar formulario
       this.email = '';
       this.password = '';
       this.confirmPassword = '';
@@ -148,6 +165,10 @@ export class LoginComponent implements OnInit {
   }
 
   async onGoogleLogin() {
+    const redirect = this.route.snapshot.queryParams['redirect'];
+    if (redirect && redirect.startsWith('/') && typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem('login_redirect', redirect);
+    }
     this.loading = true;
     this.errorMessage = '';
     this.successMessage = '';
@@ -155,7 +176,6 @@ export class LoginComponent implements OnInit {
     try {
       const { error } = await this.supabase.signInWithGoogle();
       if (error) throw error;
-      // Redirect happens automatically
     } catch (error: any) {
       this.errorMessage = error.message || 'Error al iniciar sesión con Google. Por favor, intenta de nuevo.';
       this.loading = false;

@@ -37,6 +37,15 @@ return [
 
     'supabase' => [
         'url' => env('SUPABASE_URL'),
+        /**
+         * Claves recomendadas:
+         * - SUPABASE_ANON_KEY: para operaciones de Auth (verificación de JWT).
+         * - SUPABASE_SERVICE_ROLE_KEY: para operaciones servidor-a-Supabase (REST) con permisos elevados.
+         *
+         * Por compatibilidad se mantiene SUPABASE_KEY como fallback.
+         */
+        'anon_key' => env('SUPABASE_ANON_KEY', env('SUPABASE_KEY')),
+        'service_role_key' => env('SUPABASE_SERVICE_ROLE_KEY', env('SUPABASE_KEY')),
         'key' => env('SUPABASE_KEY'),
     ],
 

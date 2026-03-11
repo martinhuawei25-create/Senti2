@@ -25,11 +25,11 @@
 
   <div class="dashboard-content">
     <div class="container">
-      <div *ngIf="errorMessage" class="alert alert-error">
+      <div *ngIf="errorMessage" class="alert alert-error" role="alert" aria-live="assertive">
         <strong>Error:</strong> {{ errorMessage }}
       </div>
 
-      <div *ngIf="successMessage" class="alert alert-success">
+      <div *ngIf="successMessage" class="alert alert-success" role="alert" aria-live="polite">
         <strong>Éxito:</strong> {{ successMessage }}
       </div>
 
@@ -156,7 +156,7 @@
                 <span *ngIf="!saving">Guardar Cambios</span>
                 <span *ngIf="saving">Guardando...</span>
               </button>
-              <button type="button" class="btn-secondary" (click)="toggleEditMode()" [disabled]="saving">
+              <button type="button" class="btn-secondary" (click)="cancelEdit()" [disabled]="saving">
                 Cancelar
               </button>
             </div>

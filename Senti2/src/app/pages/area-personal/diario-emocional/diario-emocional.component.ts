@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AreaPersonalDataService, DiaryEntry } from '../../../core/services/area-personal-data.service';
+import { NotificationService } from '../../../core/services/notification.service';
 
 const EMOCIONES = ['Calma', 'Alegría', 'Tristeza', 'Ansiedad', 'Cansancio', 'Enfado', 'Esperanza', 'Miedo', 'Gratitud', 'Preocupación'];
 
@@ -21,12 +22,16 @@ export class DiarioEmocionalComponent implements OnInit {
   note = '';
   todayStr = '';
   saved = false;
+  saving = false;
   patternSummary: { avgMood7: number | null; topEmotions: { name: string; count: number }[] } = {
     avgMood7: null,
     topEmotions: []
   };
 
-  constructor(private areaData: AreaPersonalDataService) {}
+  constructor(
+    private areaData: AreaPersonalDataService,
+    private notificationService: NotificationService
+  ) {}
 
   ngOnInit(): void {
     this.todayStr = this.getTodayStr();
@@ -53,19 +58,28 @@ export class DiarioEmocionalComponent implements OnInit {
   }
 
   async save(): Promise<void> {
-    const emotions = this.getSelectedEmotions();
-    await this.areaData.addDiaryEntry({
-      date: this.todayStr,
-      mood: this.mood,
-      emotions,
-      note: (this.note || '').trim()
-    });
-    await this.loadEntries();
-    this.note = '';
-    this.mood = 5;
-    this.emociones.forEach(e => (this.selectedEmotions[e] = false));
-    this.saved = true;
-    setTimeout(() => (this.saved = false), 3000);
+    if (this.saving) return;
+    this.saving = true;
+    try {
+      const emotions = this.getSelectedEmotions();
+      await this.areaData.addDiaryEntry({
+        date: this.todayStr,
+        mood: this.mood,
+        emotions,
+        note: (this.note || '').trim()
+      });
+      await this.loadEntries();
+      this.note = '';
+      this.mood = 5;
+      this.emociones.forEach(e => (this.selectedEmotions[e] = false));
+      this.saved = true;
+      setTimeout(() => (this.saved = false), 3000);
+      this.notificationService.success('Entrada guardada correctamente.');
+    } catch (_) {
+      this.notificationService.error('No se pudo guardar la entrada. Inténtalo de nuevo.');
+    } finally {
+      this.saving = false;
+    }
   }
 
   private buildPatternSummary(): void {
@@ -99,4 +113,5 @@ export class DiarioEmocionalComponent implements OnInit {
       year: 'numeric'
     });
   }
+
 }

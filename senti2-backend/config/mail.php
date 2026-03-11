@@ -16,6 +16,11 @@ return [
 
     'default' => env('MAIL_MAILER', 'log'),
 
+    /**
+     * Dirección destino para el formulario de contacto.
+     */
+    'contact_to' => env('MAIL_CONTACT_TO', 'senti2soporte@gmail.com'),
+
     /*
     |--------------------------------------------------------------------------
     | Mailer Configurations

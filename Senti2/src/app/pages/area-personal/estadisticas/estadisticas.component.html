@@ -13,7 +13,12 @@
       <p>Aquí puedes ver cómo evolucionan tus puntuaciones en los tests emocionales y el uso del diario. Los datos se guardan en tu dispositivo y son privados. Realizar los tests y el diario con regularidad te ayuda a identificar tendencias.</p>
     </section>
 
-    <section class="content-section" *ngIf="testResults.length > 0">
+    <div *ngIf="loading" class="loading-section">
+      <div class="loading-spinner"></div>
+      <p>Cargando estadísticas...</p>
+    </div>
+
+    <section class="content-section" *ngIf="!loading && testResults.length > 0">
       <h2>Última puntuación por test</h2>
       <div class="summary-cards">
         <div class="summary-card" *ngFor="let testId of getTestIds()">
@@ -29,7 +34,7 @@
       </div>
     </section>
 
-    <section class="content-section" *ngIf="testResults.length > 0">
+    <section class="content-section" *ngIf="!loading && testResults.length > 0">
       <h2>Historial de tests</h2>
       <div class="history-table-wrap">
         <table class="history-table">
@@ -53,7 +58,7 @@
       </div>
     </section>
 
-    <section class="content-section" *ngIf="diaryEntries.length > 0">
+    <section class="content-section" *ngIf="!loading && diaryEntries.length > 0">
       <h2>Resumen del diario emocional</h2>
       <div class="diary-stats">
         <div class="stat-card">
@@ -84,7 +89,7 @@
       </div>
     </section>
 
-    <section class="content-section empty-state" *ngIf="testResults.length === 0 && diaryEntries.length === 0">
+    <section class="content-section empty-state" *ngIf="!loading && testResults.length === 0 && diaryEntries.length === 0">
       <h2>Sin datos todavía</h2>
       <p>Cuando completes <a routerLink="/area-personal/tests-emocionales">tests emocionales</a> o añadas entradas en el <a routerLink="/area-personal/diario-emocional">diario emocional</a>, aquí aparecerán tus estadísticas y tu historial.</p>
     </section>

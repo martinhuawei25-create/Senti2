@@ -8,12 +8,13 @@ export const authGuard: CanActivateFn = async (route, state) => {
 
   const token = authApi.getToken();
 
+  const redirectUrl = state.url.startsWith('/login') ? '/inicio' : state.url;
+
   if (!token) {
-    router.navigate(['/login']);
+    router.navigate(['/login'], { queryParams: { redirect: redirectUrl } });
     return false;
   }
 
-  // Si ya tenemos usuario (p. ej. tras OAuth callback), no repetir verifyToken
   if (authApi.getCurrentUserValue()) {
     return true;
   }
@@ -22,8 +23,10 @@ export const authGuard: CanActivateFn = async (route, state) => {
 
   if (user) {
     return true;
-  } else {
-    router.navigate(['/login']);
-    return false;
   }
+  if (authApi.getToken()) {
+    return true;
+  }
+  router.navigate(['/login'], { queryParams: { redirect: redirectUrl } });
+  return false;
 };

@@ -53,6 +53,13 @@
   border: 2px solid transparent;
   position: relative;
   overflow: hidden;
+  cursor: pointer;
+}
+
+.service-card:focus {
+  outline: none;
+  border-color: var(--primary-sage);
+  box-shadow: 0 0 0 3px rgba(135, 169, 107, 0.25);
 }
 
 .service-card::before {
