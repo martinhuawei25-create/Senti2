@@ -167,6 +167,23 @@ label {
   font-family: var(--font-body);
 }
 
+.input-brown.ng-valid.ng-touched,
+.textarea-brown.ng-valid.ng-touched {
+  border-color: #2e7d32;
+  background: #f1f8f4;
+}
+
+.input-brown.ng-invalid.ng-touched,
+.textarea-brown.ng-invalid.ng-touched {
+  border-color: #c62828;
+  background: #fff5f5;
+}
+
+.input-brown,
+.textarea-brown {
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
 @media (max-width: 968px) {
   .contacto-container {
     grid-template-columns: 1fr;

@@ -8,26 +8,61 @@
       <form (ngSubmit)="onSubmit()" #contactForm="ngForm">
         <div class="form-group">
           <label for="nombre">Nombre:</label>
-          <input id="nombre" type="text" placeholder="Introduzca su nombre" class="input-brown"
-                 [(ngModel)]="nombre" name="nombre" required>
+          <input
+            id="nombre"
+            type="text"
+            class="input-brown"
+            placeholder="Introduzca su nombre"
+            [(ngModel)]="nombre"
+            name="nombre"
+            required
+            aria-label="Nombre"
+            aria-required="true"
+            [attr.aria-invalid]="!nombre && errorMessage ? 'true' : 'false'">
         </div>
 
         <div class="form-group">
           <label for="apellidos">Apellidos:</label>
-          <input id="apellidos" type="text" placeholder="Introduzca su apellido/s" class="input-brown"
-                 [(ngModel)]="apellidos" name="apellidos" required>
+          <input
+            id="apellidos"
+            type="text"
+            class="input-brown"
+            placeholder="Introduzca su apellido/s"
+            [(ngModel)]="apellidos"
+            name="apellidos"
+            required
+            aria-label="Apellidos"
+            aria-required="true"
+            [attr.aria-invalid]="!apellidos && errorMessage ? 'true' : 'false'">
         </div>
 
         <div class="form-group">
           <label for="email">Email:</label>
-          <input id="email" type="email" placeholder="Introduzca un email válido" class="input-brown"
-                 [(ngModel)]="email" name="email" required>
+          <input
+            id="email"
+            type="email"
+            class="input-brown"
+            placeholder="Introduzca un email válido"
+            [(ngModel)]="email"
+            name="email"
+            required
+            aria-label="Correo electrónico"
+            aria-required="true"
+            [attr.aria-invalid]="errorMessage?.includes('email') ? 'true' : 'false'">
         </div>
 
         <div class="form-group">
           <label for="mensaje">Motivo / Mensaje:</label>
-          <textarea id="mensaje" placeholder="Introduzca una descripción..." class="input-brown textarea-brown"
-                    [(ngModel)]="mensaje" name="mensaje" required></textarea>
+          <textarea
+            id="mensaje"
+            class="input-brown textarea-brown"
+            placeholder="Introduzca una descripción..."
+            [(ngModel)]="mensaje"
+            name="mensaje"
+            required
+            aria-label="Mensaje"
+            aria-required="true"
+            [attr.aria-invalid]="!mensaje && errorMessage ? 'true' : 'false'"></textarea>
         </div>
 
         <div class="form-group">
@@ -38,10 +73,15 @@
         </div>
 
         @if (successMessage) {
-          <div class="alert alert-success" role="alert">{{ successMessage }}</div>
+          <div class="alert alert-success" role="status" aria-live="polite">
+            {{ successMessage }}
+          </div>
         }
+
         @if (errorMessage) {
-          <div class="alert alert-error" role="alert">{{ errorMessage }}</div>
+          <div class="alert alert-error" role="alert" aria-live="assertive">
+            {{ errorMessage }}
+          </div>
         }
 
         <button type="submit" class="btn-primary" style="width: 100%; border: none; cursor: pointer;"
